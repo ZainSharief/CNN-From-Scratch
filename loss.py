@@ -18,6 +18,3 @@ class mse:
     def dervivative(self, y_true, y_pred):
         # Calculates the dervivative of mean-squared error loss
         return 2 * (y_pred - y_true) / np.size(y_true)
-    
-
-            
