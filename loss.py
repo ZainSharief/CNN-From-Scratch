@@ -15,6 +15,17 @@ class mse:
         # Calculates the mean-squared error loss
         return np.mean(np.power(y_true - y_pred, 2))
     
-    def dervivative(self, y_true, y_pred):
+    def dervivative(self, y_pred, y_true):
         # Calculates the dervivative of mean-squared error loss
         return 2 * (y_pred - y_true) / np.size(y_true)
+
+class categorical_crossentropy:
+    def __call__(self, y_pred, y_true):
+        y_pred = np.clip(y_pred, 1e-8, 1-1e-8)
+        cross_entropy = -np.sum(y_true * np.log(y_pred), axis=1)
+        return cross_entropy
+
+    def dervivative(self, y_pred, y_true):
+        y_pred = np.clip(y_pred, 1e-8, 1-1e-8)
+        gradient = -y_true / y_pred
+        return gradient
