@@ -1,4 +1,5 @@
 import numpy as np
+from scipy import signal
 from activation import *
 
 class conv2d:
@@ -13,9 +14,9 @@ class conv2d:
     def init_params(self, input_size):
         # Initialises the kernel parameters and biases for the convolution
         self.input_size = input_size
-        total_params = self.filters * (self.kernel_size[0]*self.kernel_size[1])
+        total_params = self.filters * self.input_size[-1] * (self.kernel_size[0]*self.kernel_size[1])
         kernel_params = np.random.uniform(-0.5, 0.5, total_params)
-        self.kernel_params = np.reshape(kernel_params, (self.kernel_size[0], self.kernel_size[1], self.filters))
+        self.kernel_params = np.reshape(kernel_params, (self.kernel_size[0], self.kernel_size[1], self.filters, self.input_size[-1]))
         self.bias_params = np.random.uniform(-0.5, 0.5, self.filters)
 
         self.output, self.padding_amount = self.calculate_size(input_size)
@@ -40,8 +41,9 @@ class conv2d:
     def __call__(self, input):
         # Performs the convolution and applies the activation layer
         self.input = input
+        self.channels = input.shape[-1]
         if self.padding == 'same': input = np.pad(input, pad_width=((0, 0), (self.padding_amount[0], self.padding_amount[0]), (self.padding_amount[1], self.padding_amount[1]), (0, 0))) 
-              
+
         for y in range(self.output.shape[2]):
             for x in range(self.output.shape[1]):
                 x_pos = x * self.strides
@@ -58,22 +60,37 @@ class conv2d:
     def backward(self, output_gradient, learning_rate):
         # NOT WORKING 
         kernel_gradient = np.zeros(self.kernel_params.shape)
-        input_gradient = np.zeros(self.input_size[-1])
+        input_gradient = np.zeros(self.input_size)
 
-        output_gradientPADDED = np.pad(output_gradient[j], ((1, 1),(1, 1)))
-        kernel_params = self.kernel_params.T
+        print(kernel_gradient.shape)
+        print(output_gradient.shape)
+        print(input_gradient.shape)
+        # We need to turn the output gradient into the input gradient
 
-        for minibatch in range(self.input_size[0]):
-            for i in range(self.filters):
-                for j in range(self.input_size[-1]):
+        for i in range(self.filters):
+            for j in range(self.channels):
+                kernel_gradient[i, i, j]
 
-                    kernel_gradient[i, j] += np.tensordot(self.input[minibatch, :, :, j], output_gradient[i], axes=([0,1],[0,1]))
-                    input_gradient[j] += np.tensordot(output_gradientPADDED[i], kernel_params[i, j], axes=([0,1],[0,1]))
 
-        kernel_gradient /= self.input.shape[0]
-        input_gradient /= self.input.shape[0]
+        ''' for y in range(self.input_size[2]):
+            for x in range(self.input_size[3]):
+                x_pos = x * self.strides
+                y_pos = y * self.strides
+
+                print(self.input[:,y].shape)
+                print(output_gradient[:,x].shape)
+                print(np.tensordot(self.input[y], output_gradient[x], axes=([0,1],[0,1])).shape)
+
+                kernel_gradient[x, y] += np.tensordot(self.input[y], output_gradient[x], axes=([0,1],[0,1]))
+                input_gradient[y] += np.tensordot(output_gradientPADDED[x], self.kernel_params.T[x, y], axes=([0,1],[0,1]))'''
+
+        kernel_gradient /= self.input_size[0]
+        input_gradient /= self.input_size[0]
 
         self.kernel_params -= learning_rate * kernel_gradient
         self.bias_params -= learning_rate * output_gradient
 
         return input_gradient
+    
+if __name__ == '__main__':
+    from main import *
