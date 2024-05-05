@@ -37,7 +37,7 @@ def train(model, x_train, y_train, x_val, y_val, loss_function, learning_rate=0.
             x_train = x_train[permutation]
             y_train = y_train[permutation]
 
-        for batch in range(0, len(x_train), batch_size):
+        for batch in range(0, len(x_train)-(len(x_train)%batch_size), batch_size):
             # Splitting the input data into batches
             x_batch = x_train[batch:batch+batch_size]
             y_batch = y_train[batch:batch+batch_size]
@@ -53,19 +53,25 @@ def train(model, x_train, y_train, x_val, y_val, loss_function, learning_rate=0.
             grad = loss_function.dervivative(x_batch, y_batch)
             for layer in reversed(model):
                 grad = layer.backward(grad, learning_rate)
+
+            batch_num = ((batch+1)//32)+1
+            print(f"epoch={e + 1}/{epochs}: batch={batch_num}/{len(x_train)//batch_size}, loss={loss/batch_num}", end="\r")
         
-        for batch in range(len(x_val)):
+        for batch in range(0, len(x_val)-(len(x_val)%batch_size), batch_size):
             # Splitting the input data into batches
-            x_batch = np.expand_dims(x_val[batch], axis=0)
-            y_batch = y_val[batch]
+            x_batch = x_val[batch:batch+batch_size]
+            y_batch = y_val[batch:batch+batch_size]
             
             # Forward pass 
             for layer in model:
                 x_batch = layer(x_batch)
 
-            if np.argmax(x_batch) == np.argmax(y_batch):
-                correct += 1
-            total += 1
+            for batch_idx in range(x_batch.shape[0]):
+                batch_output = x_batch[batch_idx]
+                batch_true = y_batch[batch_idx]
 
-        loss /= (len(x_train) // batch_size)
-        print(f"{e + 1}/{epochs}, loss={loss}, accuracy={correct/total}")
+                if np.argmax(batch_output) == np.argmax(batch_true):
+                    correct += 1
+                total += 1
+
+        print(f"\nepoch={e + 1}/{epochs}: accuracy={correct/total}")

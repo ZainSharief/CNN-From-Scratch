@@ -3,10 +3,10 @@ from train import *
 
 model = [
     # Model to test the fully connected layers
+    conv2d(filters=32, kernel_size=(3,3), strides=1, activation='relu', padding='same'),
     conv2d(filters=64, kernel_size=(3,3), strides=1, activation='relu', padding='same'),
     flatten(),
     dense(units=128, activation='relu'),    
-    dense(units=64, activation='relu'),
     dense(units=10, activation='sigmoid'),
 ]
 
@@ -14,7 +14,7 @@ model = [
 (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
 
 # Preprocesses the dataset images
-x_train, x_test = x_train[:32] / 255.0, x_test[:32] / 255.0
+x_train, x_test = x_train / 255.0, x_test / 255.0
 x_train = x_train.reshape(x_train.shape[0], 28, 28, 1)
 x_test = x_test.reshape(x_test.shape[0], 28, 28, 1)
 
@@ -41,5 +41,3 @@ train(
     learning_rate_scheduler=1,
     epochs=1000
 )
-
-
