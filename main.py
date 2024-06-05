@@ -1,10 +1,11 @@
 import tensorflow as tf
 from train import *
 
+# Convolutional layers not working
 model = [
-    # Model to test the fully connected layers
-    conv2d(filters=32, kernel_size=(3,3), strides=1, activation='relu', padding='same'),
-    conv2d(filters=64, kernel_size=(3,3), strides=1, activation='relu', padding='same'),
+    conv2d(filters=24, kernel_size=(3,3), strides=2, activation='relu', padding='same'),
+    conv2d(filters=64, kernel_size=(5,5), strides=1, activation='relu', padding='same'),
+    maxpool2d(pool_size=(2,2), strides=1, padding='valid'),
     flatten(),
     dense(units=128, activation='relu'),    
     dense(units=10, activation='sigmoid'),
@@ -38,6 +39,7 @@ train(
     y_val=y_test,
     loss_function=mse(),
     learning_rate=0.1,
-    learning_rate_scheduler=1,
-    epochs=1000
+    learning_rate_scheduler=0.95,
+    batch_size=32,
+    epochs=10
 )

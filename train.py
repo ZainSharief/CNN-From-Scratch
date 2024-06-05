@@ -10,7 +10,7 @@ from flatten import flatten
 from activation import *
 from loss import *
 
-def compile(model, input_shape):
+def compile(model, input_shape: tuple) -> None:
     # Initialises the layer weights & biases and calculates the output sizes given the input shape
     for layer in model:
 

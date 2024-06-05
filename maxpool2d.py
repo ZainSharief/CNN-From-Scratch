@@ -1,6 +1,17 @@
 import numpy as np
 
-class maxpool2d:
+class maxpool2d: 
+    '''
+    Class that contains the implementation of a maxpool layer
+
+    Attributes:
+        pool_size
+        strides
+        padding
+        output
+        input
+
+    '''
     def __init__(self, pool_size=(3,3), strides=2, padding='valid'):
         # Initalises all base parameters for the max pooling layer object
         self.pool_size = pool_size
@@ -29,6 +40,7 @@ class maxpool2d:
     
     def __call__(self, input):
         # Performs the max pooling layer
+        self.input = input
         if self.padding == 'same': input = np.pad(input, pad_width=((0, 0), (self.padding_amount[0], self.padding_amount[0]), (self.padding_amount[1], self.padding_amount[1]), (0, 0)))     
 
         for y in range(self.output.shape[2]):
@@ -37,6 +49,23 @@ class maxpool2d:
                 y_pos = y * self.strides
 
                 image_kernel = input[:, x_pos:x_pos+self.pool_size[0], y_pos:y_pos+self.pool_size[1], :]
-                self.output[:, x, y, :] = np.max(image_kernel, axis=(1,2))
-
+                self.output[:, x, y, :] = np.amax(image_kernel, axis=(1,2))
+               
         return self.output
+    
+    def backward(self, output_gradient, _):
+        input_gradient = np.zeros_like(self.input)
+
+        for y in range(self.output.shape[2]-self.pool_size[1]+1):
+            for x in range(self.output.shape[1]-self.pool_size[0]+1):
+                x_pos = x * self.strides
+                y_pos = y * self.strides
+
+                image_kernel = self.input[:, x_pos:x_pos+self.pool_size[0], y_pos:y_pos+self.pool_size[1], :]
+                max_values = np.amax(image_kernel, axis=(1,2), keepdims=True)
+                mask = (image_kernel == max_values).astype(int)
+                
+                input_gradient[:, x_pos:x_pos+self.pool_size[0], y_pos:y_pos+self.pool_size[1], :] += mask * output_gradient[:, x:x+self.pool_size[0], y:y+self.pool_size[1], :]
+        
+        return input_gradient
+
