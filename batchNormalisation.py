@@ -26,8 +26,7 @@ class batchNormalisation:
     def init_params(self, input_size: tuple) -> None:
     # Initialises the gamma, beta parameters and the running mean and variance
 
-        # Finds the input shape and number of channels
-        self.input_shape = input_size
+        # Finds the number of channels in the input
         self.num_channels = input_size[-1]
 
         # Initalises empty beta & gamma parameters for each channel 
@@ -43,6 +42,9 @@ class batchNormalisation:
 
         # Checks if training to update the running mean and variance and calculate values for backpropagation
         if training:
+
+            # Finds the input shape of the tensor
+            self.input_shape = input_tensor.shape
 
             # Flattens the input for compatibility with 2D and 4D tensors
             flattened_input = input_tensor.reshape(-1, self.num_channels)
