@@ -1,77 +1,124 @@
 import numpy as np
+import time
 
 # Imports all written layers
 from conv2d import conv2d
 from maxpool2d import maxpool2d
 from dense import dense
 from flatten import flatten
+from dropout import dropout
+from batchNormalisation import batchNormalisation
 
 # Imports the activation and loss functions
 from activation import *
 from loss import *
 
-def compile(model, input_shape: tuple) -> None:
-    # Initialises the layer weights & biases and calculates the output sizes given the input shape
+def initialise(model, input_shape: tuple) -> None:
+# Initialises the layer weights & biases and calculates the output sizes given the input shape
+    
+    # Iterates through each layer in the model
     for layer in model:
 
-        if isinstance(layer, conv2d) or isinstance(layer, dense):
+        # Calls the initialise parameters function on layers which have parameters
+        if isinstance(layer, conv2d) or isinstance(layer, dense) or isinstance(layer, maxpool2d) or isinstance(layer, batchNormalisation):
             layer.init_params(input_shape)
 
-        elif isinstance(layer, maxpool2d):
-            layer.calculate_size(input_shape)
+        # Passes the temporary input through the model to calculate the output shape
+        input_tensor = np.zeros(input_shape)
+        input_shape = layer.forward(input_tensor, True).shape
 
-        input_shape = layer(np.zeros(input_shape)).shape
+def train(model, train, validation, loss_function, learning_rate=0.01, learning_rate_scheduler=1, epochs=10, batch_size=32, shuffle=True):
+# Function to train the model and test it on the validation data
 
-def train(model, x_train, y_train, x_val, y_val, loss_function, learning_rate=0.01, learning_rate_scheduler=1, epochs=10, batch_size=32, shuffle=True):
-    
+    # Splits the datasets into data and annotations
+    x_train, y_train = train
+    x_val, y_val = validation
+
     for e in range(epochs):
+
+        # Resets the loss and timer to 0
         loss = 0
-        correct = 0
-        total = 0
+        time_elapsed = 0
 
-        learning_rate *= learning_rate_scheduler
-
+        # Shuffles the training data with the same permutation
         if shuffle:
-            # Shuffles the training data in the same way
-            permutation = np.random.permutation(len(x_train))  
+            permutation = np.random.permutation(x_train.shape[0])  
             x_train = x_train[permutation]
             y_train = y_train[permutation]
+    
+        # Splits up the data into arrays with the batch size entered
+        x_train = np.array_split(x_train, np.ceil(x_train.shape[0]/batch_size), axis=0)
+        y_train = np.array_split(y_train, np.ceil(y_train.shape[0]/batch_size), axis=0)
 
-        for batch in range(0, len(x_train)-(len(x_train)%batch_size), batch_size):
-            # Splitting the input data into batches
-            x_batch = x_train[batch:batch+batch_size]
-            y_batch = y_train[batch:batch+batch_size]
-            
+        for batch_num, (x_batch, y_batch) in enumerate(zip(x_train, y_train)):
+
+            # Starts the timer at the start of the pass
+            start_time = time.time()
+
             # Forward pass 
             for layer in model:
-                x_batch = layer(x_batch)
+                x_batch = layer.forward(x_batch, True)
 
             # Calculates the loss
-            loss += loss_function(x_batch, y_batch)
+            loss += loss_function.forward(x_batch, y_batch)
 
             # Backward pass
             grad = loss_function.dervivative(x_batch, y_batch)
             for layer in reversed(model):
                 grad = layer.backward(grad, learning_rate)
 
-            batch_num = ((batch+1)//32)+1
-            print(f"epoch={e + 1}/{epochs}: batch={batch_num}/{len(x_train)//batch_size}, loss={loss/batch_num}", end="\r")
+            # Ends the timer and calculates the time taken 
+            end_time = time.time()
+            time_elapsed += (end_time - start_time)
+
+            # Calculates the average time per batch in order to calculate secconds and minutes remaining
+            time_remaining = int((time_elapsed/(batch_num+1)) * (len(x_train)-(batch_num+1)))
+            minutes = time_remaining // 60
+            seconds = str(time_remaining % 60).zfill(2)
+
+            print(f"\033[Kepoch={e + 1}/{epochs}: batch={batch_num+1}/{len(x_train)}, loss={loss/(batch_num+1):.10f}, time remaining={minutes}:{seconds}", end="\r")
         
-        for batch in range(0, len(x_val)-(len(x_val)%batch_size), batch_size):
-            # Splitting the input data into batches
-            x_batch = x_val[batch:batch+batch_size]
-            y_batch = y_val[batch:batch+batch_size]
+        # Unsplits the tensors so they can be re-shuffled
+        x_train = np.concatenate(x_train, axis=0)
+        y_train = np.concatenate(y_train, axis=0)
             
-            # Forward pass 
-            for layer in model:
-                x_batch = layer(x_batch)
+        # Validates the existance of validation data
+        if x_val is not None:
 
-            for batch_idx in range(x_batch.shape[0]):
-                batch_output = x_batch[batch_idx]
-                batch_true = y_batch[batch_idx]
+            # Resets the loss to 0 for validation
+            loss = 0
+            correct = 0
+            total = 0
 
-                if np.argmax(batch_output) == np.argmax(batch_true):
-                    correct += 1
-                total += 1
+            # Splits up the data into arrays with the batch size entered
+            x_val = np.array_split(x_val, np.ceil(x_val.shape[0]/batch_size), axis=0)
+            y_val = np.array_split(y_val, np.ceil(y_val.shape[0]/batch_size), axis=0)
 
-        print(f"\nepoch={e + 1}/{epochs}: accuracy={correct/total}")
+            for batch_num, (x_batch, y_batch) in enumerate(zip(x_val, y_val)):
+
+                # Forward pass 
+                for layer in model:
+                    x_batch = layer.forward(x_batch)
+
+                # Calculates the loss
+                loss += loss_function.forward(x_batch, y_batch)
+
+                # Calculates the maxmimum argument in the x_batch and y_batch
+                predictions = np.argmax(x_batch, axis=1) 
+                true_classes = np.argmax(y_batch, axis=1)
+
+                # Sums up the number of correct predictions
+                correct += np.sum(predictions == true_classes)
+                total += x_batch.shape[0]
+            
+            print(f"\nepoch={e + 1}/{epochs}: validation loss={loss/(len(x_val)):.10f} accuracy={correct/total}")
+
+            # Unsplits the tensors so they can be re-shuffled
+            x_val = np.concatenate(x_val, axis=0)
+            y_val = np.concatenate(y_val, axis=0)
+
+        else:
+            print('\n')
+
+        # Decreases the learning rate for better convergence
+        learning_rate *= learning_rate_scheduler
