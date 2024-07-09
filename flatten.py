@@ -8,14 +8,15 @@ class flatten:
         input_shape (np.ndarray): Shape inputted to the flatten operation
     '''
 
-    def __init__(self):
+    def __init__(self) -> None:
+    # Creates an instance of the flatten layer
         self.input_shape = None
 
-    def __call__(self, input: np.ndarray) -> np.ndarray:
-        # Performs the flatten operation
-        self.input_shape = input.shape
-        return np.reshape(input, (input.shape[0], -1))
+    def forward(self, input_tensor: np.ndarray, _) -> np.ndarray:
+    # Performs the flatten operation
+        self.input_shape = input_tensor.shape
+        return np.reshape(input_tensor, (input_tensor.shape[0], -1))
 
     def backward(self, output_gradient: np.ndarray, _: float) -> np.ndarray:
-        # Backwards function which returns the input to its original shape
+    # Backwards function which returns the input to its original shape
         return np.reshape(output_gradient, self.input_shape)
