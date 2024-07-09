@@ -12,7 +12,7 @@ class flatten:
     # Creates an instance of the flatten layer
         self.input_shape = None
 
-    def forward(self, input_tensor: np.ndarray, _) -> np.ndarray:
+    def forward(self, input_tensor: np.ndarray, training: bool = False) -> np.ndarray:
     # Performs the flatten operation
         self.input_shape = input_tensor.shape
         return np.reshape(input_tensor, (input_tensor.shape[0], -1))
