@@ -36,7 +36,7 @@ class dense:
     # Calculates the expected output size
         return np.zeros([input_size[0], self.units])
 
-    def forward(self, input_tensor: np.ndarray, _) -> np.ndarray:
+    def forward(self, input_tensor: np.ndarray, training: bool = False) -> np.ndarray:
     # Performs the dense operation
 
         # Matrix multiplies the input and weights and adds on the bias
