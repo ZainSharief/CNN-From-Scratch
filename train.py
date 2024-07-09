@@ -16,6 +16,9 @@ from loss import *
 def initialise(model, input_shape: tuple) -> None:
 # Initialises the layer weights & biases and calculates the output sizes given the input shape
     
+    # Adds a batch size to the input
+    input_shape = (1, *input_shape)
+
     # Iterates through each layer in the model
     for layer in model:
 
@@ -71,12 +74,15 @@ def train(model, train, validation, loss_function, learning_rate=0.01, learning_
             end_time = time.time()
             time_elapsed += (end_time - start_time)
 
-            # Calculates the average time per batch in order to calculate secconds and minutes remaining
+            # Calculates the average time per batch in order to calculate seconds, minutes and hours remaining
             time_remaining = int((time_elapsed/(batch_num+1)) * (len(x_train)-(batch_num+1)))
-            minutes = time_remaining // 60
+            hours = time_remaining // 3600
+            minutes = str((time_remaining % 3600) // 60).zfill(2)
             seconds = str(time_remaining % 60).zfill(2)
+            if hours: time_formatted = f'{hours}:{minutes}:{seconds}' 
+            else: time_formatted = f'{minutes}:{seconds}' 
 
-            print(f"\033[Kepoch={e + 1}/{epochs}: batch={batch_num+1}/{len(x_train)}, loss={loss/(batch_num+1):.10f}, time remaining={minutes}:{seconds}", end="\r")
+            print(f"\033[Kepoch={e + 1}/{epochs}: batch={batch_num+1}/{len(x_train)}, loss={loss/(batch_num+1):.10f}, time remaining={time_formatted}", end="\r")
         
         # Unsplits the tensors so they can be re-shuffled
         x_train = np.concatenate(x_train, axis=0)
