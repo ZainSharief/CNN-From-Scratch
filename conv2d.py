@@ -94,7 +94,7 @@ class conv2d:
 
         return output
 
-    def forward(self, input_tensor: np.ndarray, _) -> np.ndarray:
+    def forward(self, input_tensor: np.ndarray, training: bool = False) -> np.ndarray:
     # Performs the forward pass on the input tensor
         
         # Stores the input to be used in backpropagation
