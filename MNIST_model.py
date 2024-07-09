@@ -32,7 +32,7 @@ y_val = tf.keras.utils.to_categorical(y_val, num_classes)
 # Compiles the model, creating all variables
 initialise(
     model=model, 
-    input_shape=(32, 28, 28, 1)
+    input_shape=(28, 28, 1)
 )
 
 # Training the model
