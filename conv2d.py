@@ -63,16 +63,16 @@ class conv2d:
 
         # Creates a sliding window view of the input with the shape of the kernel
         kernel_shape = kernel.shape[:3]
-        output_shape = output_tensor.shape[:3]
-        image_patches = np.lib.stride_tricks.sliding_window_view(input_tensor, kernel_shape, axis=(1, 2, 3))
+        output_shape = output_tensor.shape[1:3]
 
-        # Applies the strides to the image view 
-        image_patches = image_patches[:, ::strides, ::strides, :, :, :, :]
+        new_shape = (input_tensor.shape[0], *output_shape, *kernel_shape)
+        stride_shape = (0, strides, strides, 0, 0, 0)
+        image_patches = np.lib.stride_tricks.as_strided(input_tensor, shape=new_shape, strides=stride_shape, writeable=False)
 
         # Reshapes the image and kernel into the correct format for convolution
-        image_patches = image_patches.reshape(input_tensor.shape[0], *output_shape[1:], -1)
+        image_patches = image_patches.reshape(input_tensor.shape[0], *output_shape, -1)
         kernel = kernel.reshape(-1, kernel.shape[3])
-        
+
         # Convolutes the input tensor and kernel
         output_tensor = np.tensordot(image_patches, kernel, axes=([3], [0]))
 
