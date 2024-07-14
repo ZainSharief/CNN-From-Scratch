@@ -33,14 +33,14 @@ class conv2d:
 
         # Calculates the expected output size
         self.input_size = input_size
-        self.output, self.padding_amount = self.calculate_size(input_size)
+        self.output_shape, self.padding_amount = self.calculate_size(input_size)
 
         # Uses Uniform Initialisation to generate the kernel parameters
         self.kernel_shape = (self.kernel_size[0], self.kernel_size[1], self.input_size[3], self.filters)
         self.kernel_params = np.random.uniform(-0.5, 0.5, self.kernel_shape)
 
         # Initialises the bias parameters as 0
-        self.bias_params = np.zeros((self.output.shape[1], self.output.shape[2], self.output.shape[3]))
+        self.bias_params = np.zeros(self.output_shape[1:])
 
     def calculate_size(self, input_size: tuple) -> tuple:
     # Calculates the expected output size and the amount of padding required on each x and y
@@ -48,7 +48,7 @@ class conv2d:
         if self.padding == 'valid':
             output_width = np.ceil((input_size[1] - self.kernel_size[0] + 1) / self.strides).astype(int)
             output_height = np.ceil((input_size[2] - self.kernel_size[1] + 1) / self.strides).astype(int)
-            return np.zeros([input_size[0], output_width, output_height, self.filters]), (0, 0)
+            return (input_size[0], output_width, output_height, self.filters), (0, 0)
         
         elif self.padding == 'same': 
             output_width = np.ceil(input_size[1] / self.strides).astype(int)
@@ -56,26 +56,24 @@ class conv2d:
             pad_width = np.ceil(((output_width - 1) * self.strides + self.kernel_size[0] - input_size[1]) / 2).astype(int)
             pad_height = np.ceil(((output_height - 1) * self.strides + self.kernel_size[1] - input_size[2]) / 2).astype(int) 
 
-            return np.zeros((input_size[0], output_height, output_width, self.filters)), (pad_height, pad_width)
+            return (input_size[0], output_height, output_width, self.filters), (pad_height, pad_width)
 
-    def correlate(self, input_tensor: np.ndarray, kernel: np.ndarray, output_tensor: np.ndarray, strides: int = 1) -> np.ndarray:
+    def correlate(self, input_tensor: np.ndarray, kernel: np.ndarray, output_shape: tuple, strides: int = 1) -> np.ndarray:
     # Performs a correlation between a tensor and kernel
 
         # Creates a sliding window view of the input with the shape of the kernel
-        kernel_shape = kernel.shape[:3]
-        output_shape = output_tensor.shape[1:3]
-
-        new_shape = (input_tensor.shape[0], *output_shape, *kernel_shape)
-        stride_shape = (0, strides, strides, 0, 0, 0)
-        image_patches = np.lib.stride_tricks.as_strided(input_tensor, shape=new_shape, strides=stride_shape, writeable=False)
-
+        image_patches = np.lib.stride_tricks.sliding_window_view(input_tensor, kernel.shape[:3], axis=(1, 2, 3))
+        
+        # Applies the strides to the image view 
+        image_patches = image_patches[:, ::strides, ::strides, :, :, :, :]
+        
         # Reshapes the image and kernel into the correct format for convolution
-        image_patches = image_patches.reshape(input_tensor.shape[0], *output_shape, -1)
+        image_patches = image_patches.reshape(input_tensor.shape[0], *output_shape[1:3], -1)
         kernel = kernel.reshape(-1, kernel.shape[3])
-
+        
         # Convolutes the input tensor and kernel
         output_tensor = np.tensordot(image_patches, kernel, axes=([3], [0]))
-
+        
         return output_tensor
     
     def fftconvolve(self, tensor1: np.ndarray, tensor2: np.ndarray, kernel_shape: tuple) -> np.ndarray:
@@ -102,12 +100,12 @@ class conv2d:
 
         # Applies padding to the input tensor and correlates it with the kernel 
         input_tensor = np.pad(input_tensor, pad_width=((0, 0), (self.padding_amount[0], self.padding_amount[0]), (self.padding_amount[1], self.padding_amount[1]), (0, 0))) 
-        self.output = self.correlate(input_tensor, self.kernel_params, self.output, strides=self.strides)
+        output_tensor = self.correlate(input_tensor, self.kernel_params, self.output_shape, strides=self.strides)
 
         # Applies the activation function on the output tensor
-        self.output = self.activation.forward(self.output)
+        output_tensor = self.activation.forward(output_tensor)
         
-        return self.output
+        return output_tensor
 
     def backward(self, output_gradient: np.ndarray, learning_rate: float) -> np.ndarray:
     # Backwards function which updates the weight and bias parameters, calculates the input gradient for the next layer
@@ -122,9 +120,11 @@ class conv2d:
         pad_y = np.ceil((self.kernel_size[1] + input_gradient.shape[2] - output_gradient.shape[2] - 1) // 2).astype(int)
 
         # Pads the output gradient and transposes the kernel for a full convolution
-        padded_output_gradient = np.pad(output_gradient, ((0, 0), (pad_x, pad_x), (pad_y, pad_y), (0, 0)))
-        kernel_params_transpose = self.kernel_params.transpose((1, 0, 3, 2))
-        input_gradient = self.correlate(padded_output_gradient, kernel_params_transpose, input_gradient)
+        input_gradient = self.correlate(
+            np.pad(output_gradient, ((0, 0), (pad_x, pad_x), (pad_y, pad_y), (0, 0))), 
+            self.kernel_params.transpose((1, 0, 3, 2)), 
+            input_gradient.shape
+        )
 
         # Computes the gradient of the unstrided input tensor
         if self.strides > 1:
@@ -136,9 +136,8 @@ class conv2d:
         # Calculates the kernel gradient using fast convolutions
         kernel_gradient = self.fftconvolve(self.input_tensor, output_strided, self.kernel_shape)
 
-        # Updates the kernel and bias parameters
-        kernel_gradient /= input_gradient.shape[0]            
-        self.kernel_params -= learning_rate * kernel_gradient
+        # Updates the kernel and bias parameters           
+        self.kernel_params -= learning_rate * (kernel_gradient / input_gradient.shape[0]) 
         self.bias_params -= learning_rate * np.mean(output_gradient, axis=0) 
 
         return input_gradient
