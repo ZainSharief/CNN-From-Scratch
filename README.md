@@ -24,6 +24,13 @@ Within the project, we use two different approaches to perform the correlation o
 This approach was taken, rather than typical implementations of a Convolutional Layer which use the signal library to avoid limitations with large-scale convolution operations, providing a much faster and more satisfying solution.
 
 #### Max-Pooling Implementation
+A typical max-pooling layer would consist of a pass to find the maximum item and a pass to find the position of that item, which is inefficient.
+
+- Once again, by utilising a sliding window, we can create a view of the tensor so we only have to pass through it a single time. We can then find the maxiumum value and its respective position with ease.
+
+Another suggestion is to use indexing abilites to find the position of the max item and use that to find the max item. However, numpy reqiures unravel_index for higher order indices which ends up being slower than seperately calculating the max and argmax. 
+
+#### Fully Connected (Dense) Implementation
 
 
 ## Installation
@@ -62,7 +69,7 @@ The implemented Convolutional Neural Network architecture, provided with a Stoch
 - softmax
 
 #### Loss Functions
-- Mean Squared Erorr
+- Mean Squared Error
 - Binary Cross-Entropy
 - Categorical Cross-Entropy
 
