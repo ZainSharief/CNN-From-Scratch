@@ -8,7 +8,6 @@ This project is an implementation of a Convolutional Neural Network (CNN) from s
 - [Installation](#installation)
 - [Architecture](#architecture)
 - [Results](#results)
-- [Examples](#examples)
 - [License](#license)
 - [Contact](#contact)
 
@@ -53,7 +52,7 @@ Another suggestion is to use indexing abilites to find the position of the max i
   ```
 ## Architecture
 
-The implemented Convolutional Neural Network architecture, provided with a Stochastic Gradient Descent optimizer, includes:
+The implemented Convolutional Neural Network architecture where customisable parameters are displayed in brackets, provided with a Stochastic Gradient Descent optimizer, includes:
 
 #### General Layers
 - Convolutional Layers: (filters, kernel size, strides, padding type)
@@ -74,14 +73,9 @@ The implemented Convolutional Neural Network architecture, provided with a Stoch
 - Categorical Cross-Entropy
 
 ## Results
+After training on the simple model displayed in [MNIST_model.py](MNIST_model.py) for 10 epochs, we get the following:
 
-
-## Examples
-Some examples of how this script can be used are contained within these files:
-
-[MNIST_model.py](MNIST_model.py): Example script to train on the MNIST dataset
-
-[CIFAR100_model.py](CIFAR100_model.py): Example script to train on the CIFAR100 dataset
+![loss_accuracy_graph](loss_accuracy_graph.JPG)
 
 ## License
 This project is licensed under the MIT License. See the [LICENSE.txt](LICENSE.txt) file for more details.
