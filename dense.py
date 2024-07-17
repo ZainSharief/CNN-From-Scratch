@@ -43,7 +43,7 @@ class dense:
         self.input_tensor = input_tensor
         self.output = np.dot(input_tensor, self.weight_params.T) + self.bias_params
 
-        # Applies the activation funtion to the input
+        # Applies the activation function to the input
         self.output = self.activation.forward(self.output)
 
         return self.output
