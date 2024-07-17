@@ -17,7 +17,7 @@ class dropout:
     def forward(self, input_tensor: np.ndarray, training: bool = False) -> np.ndarray:
     # Performs the dropout function    
 
-        # Only decactivates neurons during training
+        # Only deactivates neurons during training
         if training:
             
             # Creates a mask to multiply by the input which deactivates a probability of neurons
