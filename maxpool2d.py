@@ -28,13 +28,13 @@ class maxpool2d:
     # Calculates the expected output size and the amount of padding required on each x and y
         
         if self.padding == 'valid':
-            output_width = int(np.ceil((input_size[1] - self.pool_size[0] + 1) / self.strides))
-            output_height = int(np.ceil((input_size[2] - self.pool_size[1] + 1) / self.strides))
+            output_width = int(np.ceil((input_size[1] - self.pool_size[0] + 1) // self.strides))
+            output_height = int(np.ceil((input_size[2] - self.pool_size[1] + 1) // self.strides))
             return (input_size[0], output_height, output_width, input_size[3]), (0, 0)
     
         elif self.padding == 'same': 
-            output_height = int(np.ceil(input_size[1] - self.pool_size[0] + 1 / self.strides))
-            output_width = int(np.ceil(input_size[2] - self.pool_size[1] + 1 / self.strides))
+            output_height = int(np.ceil(input_size[1] - self.pool_size[0] + 1 // self.strides))
+            output_width = int(np.ceil(input_size[2] - self.pool_size[1] + 1 // self.strides))
             pad_width = int(((output_width - 1) * self.strides + self.pool_size[0] - input_size[1]) // 2)
             pad_height = int(((output_height - 1) * self.strides + self.pool_size[1] - input_size[2]) // 2)
  
