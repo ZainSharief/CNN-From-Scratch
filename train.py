@@ -39,7 +39,9 @@ def train(model, train, validation, loss_function, learning_rate=0.01, learning_
 
     for e in range(epochs):
 
-        # Resets the loss and timer to 0
+        # Resets the loss, timer and acccuracy variables to 0
+        correct = 0
+        total = 0
         loss = 0
         time_elapsed = 0
 
@@ -65,6 +67,14 @@ def train(model, train, validation, loss_function, learning_rate=0.01, learning_
             # Calculates the loss
             loss += loss_function.forward(x_batch, y_batch)
 
+            # Calculates the maxmimum argument in the x_batch and y_batch
+            predictions = np.argmax(x_batch, axis=1) 
+            true_classes = np.argmax(y_batch, axis=1)
+
+            # Sums up the number of correct predictions
+            correct += np.sum(predictions == true_classes)
+            total += x_batch.shape[0]
+
             # Backward pass
             grad = loss_function.dervivative(x_batch, y_batch)
             for layer in reversed(model):
@@ -82,7 +92,7 @@ def train(model, train, validation, loss_function, learning_rate=0.01, learning_
             if hours: time_formatted = f'{hours}:{minutes}:{seconds}' 
             else: time_formatted = f'{minutes}:{seconds}' 
 
-            print(f"\033[Kepoch={e + 1}/{epochs}: batch={batch_num+1}/{len(x_train)}, loss={loss/(batch_num+1):.10f}, time remaining={time_formatted}", end="\r")
+            print(f"\033[Kepoch={e + 1}/{epochs}: batch={batch_num+1}/{len(x_train)}, loss={loss/(batch_num+1):.10f}, accuracy={correct/total:.4f}, time remaining={time_formatted}", end="\r")
         
         # Unsplits the tensors so they can be re-shuffled
         x_train = np.concatenate(x_train, axis=0)
@@ -117,7 +127,7 @@ def train(model, train, validation, loss_function, learning_rate=0.01, learning_
                 correct += np.sum(predictions == true_classes)
                 total += x_batch.shape[0]
             
-            print(f"\nepoch={e + 1}/{epochs}: validation loss={loss/(len(x_val)):.10f} accuracy={correct/total}")
+            print(f"\nepoch={e + 1}/{epochs}: validation loss={loss/(len(x_val)):.10f}, validation accuracy={correct/total}")
 
             # Unsplits the tensors so they can be re-shuffled
             x_val = np.concatenate(x_val, axis=0)
