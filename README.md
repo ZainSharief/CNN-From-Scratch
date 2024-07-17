@@ -80,9 +80,11 @@ The implemented Convolutional Neural Network architecture where customisable par
 - Categorical Cross-Entropy
 
 ## Results
-After training on the simple model displayed in [MNIST_model.py](MNIST_model.py) for 10 epochs, we get the following:
+To test out the CNN architecture, a simple model has been devised to train on the MNIST dataset. The code for this implemntation, found at [MNIST_model.py](MNIST_model.py) utilises tensorflow for loading and preprocessing the data, along with augumentation to improve training and reduce overfitting. After training over 15 epochs, the following results have been achieved using categorical cross-entropy loss.    
 
 ![loss_accuracy_graph](loss_accuracy_graph.JPG)
+
+From the results, we can see that the loss and accuracy show a typical shape, decreasing in steepness over the 15 epochs. A learning rate scheduler has been used to decrease the learning rate after each epoch, and the model starts to show overfitting near the end, suggesting the model is effectively learning the training data. 
 
 ## License
 This project is licensed under the MIT License. See the [LICENSE.txt](LICENSE.txt) file for more details.
