@@ -29,16 +29,6 @@ A typical max-pooling layer would consist of a pass to find the maximum item and
 
 Another suggestion is to use indexing abilites to find the position of the max item and use that to find the max item. However, numpy reqiures unravel_index for higher order indices which ends up being slower than seperately calculating the max and argmax. 
 
-#### Fully Connected (Dense) Implementation
-Calculating the output value for each node can be inefficient using iteration, also requiring careful manipulation of the weights and biases.
-
-- Using matrix multiplication with high order tensors, we are able to utilise numpy's optimised calculations to calculate forward propagation efficiently. We can use this same method of matrix multiplication to calculate the gradients during back-propagation and update the weights and biases respectively.
-
-#### Batch Normalisation Implementation
-- During the backwards pass, we use numpy's reshaping abilities to provide a view of the tensor, without using any unnecessary storage, so that we can effectively back propagate no matter the order of the input tensor. 
-
-- Batch Normalisation layers have been implemented to stabilise training and provide much faster convergence.
-
 ## Installation
 1. Clone the repository:
    
